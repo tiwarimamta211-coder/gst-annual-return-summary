@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GST Annual Return Summary Tool | IncomeAIHub</title>
+<meta name="description" content="Free GST Annual Return Summary Tool - Calculate yearly sales, purchases, tax liability, ITC summary and generate printable GSTR-9 style annual report.">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<!-- ====== ADSENSE PLACEHOLDER: Header Ad Slot ====== -->
+<!--
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+-->
+
+<style>
+:root{
+  --bg-deep:#06090f;
+  --bg-panel:#0b1220;
+  --bg-panel2:#0e1726;
+  --cyan:#00f0ff;
+  --cyan-dim:#0891a8;
+  --purple:#b14eff;
+  --green:#00ff9d;
+  --amber:#ffb800;
+  --red:#ff4d6a;
+  --text:#d9e6f2;
+  --text-dim:#7e93a8;
+  --border:rgba(0,240,255,0.18);
+  --border-soft:rgba(255,255,255,0.06);
+  --shadow-glow:0 0 24px rgba(0,240,255,0.12);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(177,78,255,0.10), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(0,240,255,0.10), transparent 40%),
+    var(--bg-deep);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  min-height:100vh;
+  line-height:1.5;
+}
+
+.bg-grid{
+  position:fixed; inset:0; z-index:-1;
+  background-image:
+    linear-gradient(rgba(0,240,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,0.035) 1px, transparent 1px);
+  background-size:38px 38px;
+  pointer-events:none;
+}
+
+.wrap{max-width:1180px;margin:0 auto;padding:18px 20px 60px;}
+
+/* ============ HEADER ============ */
+header.top{
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:14px;
+  padding:18px 22px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:linear-gradient(135deg, rgba(0,240,255,0.05), rgba(177,78,255,0.05));
+  margin-bottom:22px;
+  box-shadow:var(--shadow-glow);
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+  width:46px;height:46px;border-radius:10px;
+  background:linear-gradient(135deg, var(--cyan), var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif; font-weight:900; font-size:20px; color:#04101a;
+  box-shadow:0 0 18px rgba(0,240,255,0.4);
+}
+.brand h1{
+  font-family:'Orbitron',sans-serif; font-size:18px; letter-spacing:1px;
+  color:var(--cyan); text-shadow:0 0 12px rgba(0,240,255,0.5);
+}
+.brand p{font-size:12px; color:var(--text-dim); letter-spacing:0.5px;}
+.fy-badge{
+  font-family:'Share Tech Mono',monospace;
+  background:rgba(0,255,157,0.08);
+  border:1px solid rgba(0,255,157,0.35);
+  color:var(--green);
+  padding:8px 16px;
+  border-radius:8px;
+  font-size:13px;
+}
+
+/* ============ TABS ============ */
+.tabs{
+  display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;
+}
+.tab-btn{
+  font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px;
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  color:var(--text-dim);
+  padding:10px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  letter-spacing:0.4px;
+}
+.tab-btn:hover{border-color:var(--border); color:var(--text);}
+.tab-btn.active{
+  background:linear-gradient(135deg, rgba(0,240,255,0.15), rgba(177,78,255,0.1));
+  border-color:var(--cyan);
+  color:var(--cyan);
+  box-shadow:0 0 14px rgba(0,240,255,0.2);
+}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block; animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+/* ============ CARDS ============ */
+.card{
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:20px;
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; flex-wrap:wrap; gap:10px;
+}
+.card-head h2{
+  font-family:'Orbitron',sans-serif; font-size:15px; color:var(--cyan);
+  letter-spacing:0.5px;
+}
+.card-head .sub{font-size:12px; color:var(--text-dim);}
+
+/* ============ MONTH TABLE ============ */
+.table-scroll{overflow-x:auto; border-radius:10px; border:1px solid var(--border-soft);}
+table.data-table{
+  width:100%; border-collapse:collapse; min-width:1000px;
+  font-family:'Share Tech Mono',monospace; font-size:12.5px;
+}
+table.data-table thead th{
+  background:rgba(0,240,255,0.06);
+  color:var(--cyan);
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px;
+  letter-spacing:0.3px;
+  padding:10px 8px;
+  border-bottom:1px solid var(--border);
+  text-align:right;
+  white-space:nowrap;
+}
+table.data-table thead th:first-child{text-align:left;}
+table.data-table tbody td{
+  padding:6px 8px;
+  border-bottom:1px solid var(--border-soft);
+  text-align:right;
+}
+table.data-table tbody td:first-child{
+  text-align:left; color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:600;
+}
+table.data-table tbody tr:hover{background:rgba(0,240,255,0.03);}
+table.data-table input{
+  width:100px;
+  background:var(--bg-panel2);
+  border:1px solid var(--border-soft);
+  color:var(--text);
+  padding:6px 8px;
+  border-radius:6px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+  text-align:right;
+}
+table.data-table input:focus{
+  outline:none; border-color:var(--cyan); box-shadow:0 0 8px rgba(0,240,255,0.25);
+}
+table.data-table tfoot td{
+  padding:10px 8px;
+  font-weight:700;
+  color:var(--green);
+  background:rgba(0,255,157,0.05);
+  border-top:1px solid rgba(0,255,157,0.3);
+}
+table.data-table tfoot td:first-child{color:var(--green); font-family:'Rajdhani',sans-serif;}
+
+/* ============ FORM GRID (rates / ITC / other) ============ */
+.form-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+.field label{
+  display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px; letter-spacing:0.3px;
+}
+.field input, .field select{
+  width:100%;
+  background:var(--bg-panel2);
+  border:1px solid var(--border-soft);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:8px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:13px;
+}
+.field input:focus, .field select:focus{
+  outline:none; border-color:var(--cyan); box-shadow:0 0 8px rgba(0,240,255,0.2);
+}
+.hint{font-size:11px; color:var(--text-dim); margin-top:4px;}
+
+/* ============ BUTTONS ============ */
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+.btn{
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px;
+  padding:11px 22px;
+  border-radius:9px;
+  cursor:pointer;
+  border:1px solid transparent;
+  letter-spacing:0.4px;
+  transition:all 0.2s ease;
+}
+.btn-primary{
+  background:linear-gradient(135deg, var(--cyan), #0072ff);
+  color:#031018; box-shadow:0 0 16px rgba(0,240,255,0.35);
+}
+.btn-primary:hover{transform:translateY(-1px); box-shadow:0 0 22px rgba(0,240,255,0.5);}
+.btn-ghost{
+  background:transparent; border:1px solid var(--border); color:var(--cyan);
+}
+.btn-ghost:hover{background:rgba(0,240,255,0.08);}
+.btn-purple{
+  background:linear-gradient(135deg, var(--purple), #6a2bd9);
+  color:#fff; box-shadow:0 0 16px rgba(177,78,255,0.35);
+}
+.btn-purple:hover{transform:translateY(-1px);}
+.btn-danger{background:transparent; border:1px solid rgba(255,77,106,0.4); color:var(--red);}
+.btn-danger:hover{background:rgba(255,77,106,0.08);}
+
+/* ============ SUMMARY KPI CARDS ============ */
+.kpi-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px; margin-bottom:20px;
+}
+.kpi{
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+}
+.kpi::before{
+  content:''; position:absolute; top:0; left:0; width:3px; height:100%;
+  background:var(--accent, var(--cyan));
+}
+.kpi .label{font-size:11.5px; color:var(--text-dim); letter-spacing:0.5px; margin-bottom:6px; text-transform:uppercase;}
+.kpi .value{font-family:'Share Tech Mono',monospace; font-size:21px; font-weight:700; color:var(--accent, var(--cyan));}
+.kpi.green{--accent:var(--green);}
+.kpi.purple{--accent:var(--purple);}
+.kpi.amber{--accent:var(--amber);}
+.kpi.red{--accent:var(--red);}
+
+/* ============ SUMMARY TABLE ============ */
+table.summary-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.summary-table th{
+  text-align:left; padding:10px 12px; color:var(--cyan); font-size:12px;
+  border-bottom:1px solid var(--border); font-family:'Rajdhani',sans-serif;
+}
+table.summary-table td{
+  padding:9px 12px; border-bottom:1px solid var(--border-soft);
+}
+table.summary-table td:last-child, table.summary-table th:last-child{text-align:right; font-family:'Share Tech Mono',monospace;}
+table.summary-table tr.total-row td{
+  font-weight:700; color:var(--green); border-top:1px solid rgba(0,255,157,0.3); border-bottom:none;
+}
+table.summary-table tr.subhead td{
+  background:rgba(0,240,255,0.04); font-weight:700; color:var(--cyan); font-family:'Orbitron',sans-serif; font-size:11.5px;
+}
+
+/* ============ BADGE ============ */
+.badge{
+  display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px;
+  font-weight:700; letter-spacing:0.3px;
+}
+.badge.ok{background:rgba(0,255,157,0.12); color:var(--green); border:1px solid rgba(0,255,157,0.3);}
+.badge.warn{background:rgba(255,184,0,0.12); color:var(--amber); border:1px solid rgba(255,184,0,0.3);}
+.badge.danger{background:rgba(255,77,106,0.12); color:var(--red); border:1px solid rgba(255,77,106,0.3);}
+
+/* ============ HINDI GUIDE ============ */
+.guide-box{
+  background:linear-gradient(135deg, rgba(177,78,255,0.06), rgba(0,240,255,0.04));
+  border:1px solid var(--border);
+  border-radius:12px; padding:18px 20px; margin-top:6px;
+}
+.guide-box h3{color:var(--purple); font-family:'Orbitron',sans-serif; font-size:14px; margin-bottom:10px;}
+.guide-box p, .guide-box li{font-size:14px; color:var(--text); line-height:1.7;}
+.guide-box ul{padding-left:20px; margin-top:6px;}
+.guide-box li{margin-bottom:6px;}
+.guide-box strong{color:var(--cyan);}
+
+/* ============ FOOTER / ADSENSE ============ */
+.ad-slot{
+  border:1px dashed var(--border);
+  border-radius:10px;
+  padding:14px;
+  text-align:center;
+  color:var(--text-dim);
+  font-size:11px;
+  margin:18px 0;
+  letter-spacing:0.4px;
+}
+footer.site-footer{
+  text-align:center; padding:24px 0; color:var(--text-dim); font-size:12px; margin-top:30px;
+  border-top:1px solid var(--border-soft);
+}
+footer.site-footer a{color:var(--cyan); text-decoration:none;}
+
+/* ============ DISCLAIMER ============ */
+.disclaimer{
+  font-size:11.5px; color:var(--text-dim); border-left:2px solid var(--amber);
+  padding:10px 14px; background:rgba(255,184,0,0.04); border-radius:6px; margin-top:14px;
+}
+
+/* ============ PRINT REPORT (hidden until print) ============ */
+#printReport{display:none;}
+
+@media print{
+  body{background:#fff !important; color:#111 !important;}
+  .bg-grid, header.top, .tabs, .ad-slot, footer.site-footer, .btn-row, .no-print{display:none !important;}
+  .wrap{max-width:100%; padding:0; margin:0;}
+  #printReport{display:block !important; color:#111;}
+  #printReport *{color:#111 !important;}
+  .tab-panel{display:none !important;}
+  #printReport table{width:100%; border-collapse:collapse; font-size:12px;}
+  #printReport th, #printReport td{border:1px solid #999; padding:6px 8px;}
+  #printReport th{background:#eee;}
+  #printReport h1,#printReport h2,#printReport h3{color:#000 !important;}
+}
+
+@media (max-width:680px){
+  .brand h1{font-size:15px;}
+  header.top{padding:14px;}
+  .kpi .value{font-size:17px;}
+  .tab-btn{font-size:12.5px; padding:9px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="wrap">
+
+  <!-- ============ HEADER ============ -->
+  <header class="top">
+    <div class="brand">
+      <div class="brand-icon">G</div>
+      <div>
+        <h1>GST ANNUAL RETURN SUMMARY</h1>
+        <p>IncomeAIHub • GSTR-9 Style Yearly Tax Engine</p>
+      </div>
+    </div>
+    <div class="fy-badge" id="fyBadge">FY 2025-26</div>
+  </header>
+
+  <!-- ============ AD SLOT ============ -->
+  <div class="ad-slot no-print">
+    Advertisement Space (728x90 / Responsive) — AdSense Unit Here
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs no-print">
+    <button class="tab-btn active" data-tab="setup">⚙ Setup</button>
+    <button class="tab-btn" data-tab="monthly">📅 Monthly Data</button>
+    <button class="tab-btn" data-tab="itc">📥 ITC & Other Tax</button>
+    <button class="tab-btn" data-tab="summary">📊 Annual Summary</button>
+    <button class="tab-btn" data-tab="guide">🇮🇳 हिंदी गाइड</button>
+  </div>
+
+  <!-- ============ TAB: SETUP ============ -->
+  <div class="tab-panel active" id="tab-setup">
+    <div class="card">
+      <div class="card-head">
+        <h2>BUSINESS & FINANCIAL YEAR DETAILS</h2>
+        <span class="sub">GSTIN, legal name aur financial year set karein</span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>GSTIN</label>
+          <input type="text" id="gstin" placeholder="22AAAAA0000A1Z5" maxlength="15" style="text-transform:uppercase">
+        </div>
+        <div class="field">
+          <label>Legal / Trade Name</label>
+          <input type="text" id="legalName" placeholder="Your Business Name">
+        </div>
+        <div class="field">
+          <label>Financial Year</label>
+          <select id="fySelect">
+            <option value="2023-24">2023-24</option>
+            <option value="2024-25">2024-25</option>
+            <option value="2025-26" selected>2025-26</option>
+            <option value="2026-27">2026-27</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>State / UT</label>
+          <select id="stateSelect">
+            <option>Chhattisgarh</option>
+            <option>Maharashtra</option>
+            <option>Delhi</option>
+            <option>Karnataka</option>
+            <option>Uttar Pradesh</option>
+            <option>Gujarat</option>
+            <option>Tamil Nadu</option>
+            <option>West Bengal</option>
+            <option>Rajasthan</option>
+            <option>Telangana</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aggregate Turnover Slab</label>
+          <select id="turnoverSlab">
+            <option value="below2cr">Below ₹2 Crore (GSTR-9 Optional)</option>
+            <option value="2to5cr">₹2 Cr – ₹5 Cr (GSTR-9C Applicable*)</option>
+            <option value="above5cr">Above ₹5 Crore (GSTR-9C Mandatory)</option>
+          </select>
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠️ Yeh tool sirf calculation aur reporting ke liye hai. GSTR-9 / 9C ki actual filing GST portal par hoti hai. Turnover slabs CGST notifications ke according badal sakti hain — apne CA se confirm karein.
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goToTab('monthly')">Next: Monthly Data →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: MONTHLY DATA ============ -->
+  <div class="tab-panel" id="tab-monthly">
+    <div class="card">
+      <div class="card-head">
+        <h2>MONTHLY OUTWARD SUPPLIES (SALES) — TAXABLE VALUE</h2>
+        <span class="sub">Har mahine ki taxable sales value (₹) bharein</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="salesTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Taxable Value (₹)</th>
+              <th>CGST Rate %</th>
+              <th>SGST Rate %</th>
+              <th>IGST Rate %</th>
+              <th>Exempt/Nil Sales (₹)</th>
+              <th>Export (Zero-Rated) (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="salesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>MONTHLY INWARD SUPPLIES (PURCHASES) — TAXABLE VALUE</h2>
+        <span class="sub">Har mahine ki taxable purchase value (₹) bharein (ITC eligible)</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="purchaseTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Taxable Value (₹)</th>
+              <th>CGST Rate %</th>
+              <th>SGST Rate %</th>
+              <th>IGST Rate %</th>
+              <th>RCM Liability (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="purchaseBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="fillSampleData()">⚡ Fill Sample Data</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear All Data</button>
+        <button class="btn btn-primary" onclick="goToTab('itc')">Next: ITC & Other Tax →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: ITC & OTHER ============ -->
+  <div class="tab-panel" id="tab-itc">
+    <div class="card">
+      <div class="card-head">
+        <h2>INPUT TAX CREDIT (ITC) ADJUSTMENTS</h2>
+        <span class="sub">GSTR-2B se mismatch, reversal aur ineligible ITC adjust karein</span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>ITC Reversed (Rule 42/43) — ₹</label>
+          <input type="number" id="itcReversed" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>Ineligible ITC (Sec 17(5)) — ₹</label>
+          <input type="number" id="itcIneligible" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>ITC Availed via TRAN-1/2 — ₹</label>
+          <input type="number" id="itcTran" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>Excess ITC Claimed Earlier (to reduce) — ₹</label>
+          <input type="number" id="itcExcess" value="0" min="0" oninput="calculateAll()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>LATE FEES, INTEREST & PREVIOUS BALANCES</h2>
+        <span class="sub">Annual return ke time pending dues aur balances</span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Late Fee Payable (₹)</label>
+          <input type="number" id="lateFee" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>Interest on Late Payment (₹)</label>
+          <input type="number" id="interest" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>Opening Cash Ledger Balance (₹)</label>
+          <input type="number" id="openingCash" value="0" min="0" oninput="calculateAll()">
+        </div>
+        <div class="field">
+          <label>Opening Credit Ledger Balance (₹)</label>
+          <input type="number" id="openingCredit" value="0" min="0" oninput="calculateAll()">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goToTab('summary')">Next: View Annual Summary →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TAB: SUMMARY ============ -->
+  <div class="tab-panel" id="tab-summary">
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">Total Annual Turnover</div>
+        <div class="value" id="kpiTurnover">₹0</div>
+      </div>
+      <div class="kpi green">
+        <div class="label">Total Output Tax</div>
+        <div class="value" id="kpiOutputTax">₹0</div>
+      </div>
+      <div class="kpi purple">
+        <div class="label">Total ITC Available</div>
+        <div class="value" id="kpiITC">₹0</div>
+      </div>
+      <div class="kpi amber" id="kpiNetCard">
+        <div class="label">Net Tax Payable</div>
+        <div class="value" id="kpiNetTax">₹0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>SECTION A — OUTWARD SUPPLIES SUMMARY</h2>
+        <span class="sub" id="sectionAStatus"></span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Particulars</th><th>Amount (₹)</th></tr></thead>
+        <tbody id="sectionABody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>SECTION B — INWARD SUPPLIES & ITC SUMMARY</h2>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Particulars</th><th>Amount (₹)</th></tr></thead>
+        <tbody id="sectionBBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>SECTION C — TAX LIABILITY & PAYMENT</h2>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Particulars</th><th>Amount (₹)</th></tr></thead>
+        <tbody id="sectionCBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>MONTH-WISE BREAKDOWN</h2>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="breakdownTable">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Sales (₹)</th>
+              <th>Purchase (₹)</th>
+              <th>Output Tax (₹)</th>
+              <th>ITC (₹)</th>
+              <th>Net Payable (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="breakdownBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-purple" onclick="window.print()">🖨 Print / Download Annual Report (PDF)</button>
+        <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div class="ad-slot no-print">
+      Advertisement Space (Native / In-feed) — AdSense Unit Here
+    </div>
+  </div>
+
+  <!-- ============ TAB: HINDI GUIDE ============ -->
+  <div class="tab-panel" id="tab-guide">
+    <div class="card">
+      <div class="guide-box">
+        <h3>📘 GST Annual Return Summary Tool — पूरी जानकारी हिंदी में</h3>
+        <p><strong>यह टूल क्या करता है?</strong><br>
+        यह टूल आपके पूरे फाइनेंशियल ईयर की GST सेल्स और परचेज़ डेटा लेकर एक एनुअल समरी तैयार करता है — जैसे GSTR-9 फॉर्म में दिखाई जाती है। यह आपको टैक्स लायबिलिटी, ITC (इनपुट टैक्स क्रेडिट), और नेट पेएबल अमाउंट कैलकुलेट करने में मदद करता है।</p>
+
+        <h3 style="margin-top:18px;">📝 इस्तेमाल कैसे करें (Step by Step)</h3>
+        <ul>
+          <li><strong>Step 1 — Setup Tab:</strong> अपना GSTIN, बिज़नेस का नाम, फाइनेंशियल ईयर और राज्य चुनें।</li>
+          <li><strong>Step 2 — Monthly Data Tab:</strong> हर महीने की टैक्सेबल सेल्स वैल्यू, CGST/SGST/IGST रेट, एक्सपोर्ट और एक्सेम्प्ट सेल्स भरें। फिर परचेज़ टेबल में भी वैसे ही डेटा डालें।</li>
+          <li><strong>Step 3 — ITC & Other Tax Tab:</strong> अगर कोई ITC रिवर्सल, इनेलिजिबल ITC, लेट फीस या इंटरेस्ट है तो वहां भरें।</li>
+          <li><strong>Step 4 — Annual Summary Tab:</strong> यहां आपको पूरे साल का टोटल टर्नओवर, आउटपुट टैक्स, ITC और नेट टैक्स पेएबल अपने आप दिख जाएगा।</li>
+          <li><strong>Step 5 — Print/Download:</strong> "Print / Download Annual Report" बटन दबाकर PDF रिपोर्ट सेव करें — यह CA को देने या रिकॉर्ड रखने के लिए useful है।</li>
+        </ul>
+
+        <h3 style="margin-top:18px;">💡 ज़रूरी बातें</h3>
+        <ul>
+          <li>यह टूल सिर्फ कैलकुलेशन और रिपोर्टिंग के लिए है — असली GSTR-9 फाइलिंग GST पोर्टल (gst.gov.in) पर ही होती है।</li>
+          <li>₹2 करोड़ से कम टर्नओवर वालों के लिए GSTR-9 फाइल करना ऑप्शनल है (notification के अनुसार बदल सकता है)।</li>
+          <li>₹5 करोड़ से ज़्यादा टर्नओवर वालों को GSTR-9C (reconciliation statement) भी फाइल करना ज़रूरी है।</li>
+          <li>सही टैक्स कैलकुलेशन के लिए हमेशा एक qualified CA या टैक्स कंसल्टेंट से वेरिफाई करवाएं।</li>
+          <li>डेटा आपके ब्राउज़र में ही रहता है — किसी सर्वर पर सेव नहीं होता, इसलिए ब्राउज़र बंद करने से पहले रिपोर्ट प्रिंट/डाउनलोड कर लें।</li>
+        </ul>
+
+        <h3 style="margin-top:18px;">🔑 मुख्य फीचर्स</h3>
+        <ul>
+          <li>✅ महीनेवार सेल्स और परचेज़ एंट्री</li>
+          <li>✅ CGST, SGST, IGST का अलग-अलग कैलकुलेशन</li>
+          <li>✅ ITC रिवर्सल और इनेलिजिबल ITC एडजस्टमेंट</li>
+          <li>✅ नेट टैक्स पेएबल / रिफंडेबल का ऑटोमैटिक कैलकुलेशन</li>
+          <li>✅ प्रिंट-रेडी एनुअल रिपोर्ट (PDF जैसा फॉर्मेट)</li>
+          <li>✅ CSV एक्सपोर्ट सुविधा</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRINT-ONLY REPORT ============ -->
+  <div id="printReport">
+    <h1 style="font-family:Arial; font-size:22px; margin-bottom:4px;">GST Annual Return Summary Report</h1>
+    <p id="printMeta" style="font-size:13px; margin-bottom:16px;"></p>
+
+    <h2 style="font-size:16px; margin:14px 0 6px;">A. Business Details</h2>
+    <table>
+      <tr><th>GSTIN</th><td id="pGstin"></td><th>Legal Name</th><td id="pLegalName"></td></tr>
+      <tr><th>Financial Year</th><td id="pFy"></td><th>State</th><td id="pState"></td></tr>
+    </table>
+
+    <h2 style="font-size:16px; margin:14px 0 6px;">B. Outward Supplies Summary</h2>
+    <table id="pSectionA"></table>
+
+    <h2 style="font-size:16px; margin:14px 0 6px;">C. Inward Supplies & ITC Summary</h2>
+    <table id="pSectionB"></table>
+
+    <h2 style="font-size:16px; margin:14px 0 6px;">D. Tax Liability & Payment</h2>
+    <table id="pSectionC"></table>
+
+    <h2 style="font-size:16px; margin:14px 0 6px;">E. Month-wise Breakdown</h2>
+    <table id="pBreakdown"></table>
+
+    <p style="font-size:10.5px; margin-top:18px; color:#555;">
+      Generated by IncomeAIHub — GST Annual Return Summary Tool. This is a computational summary only and does not constitute an official GST filing. Please verify all figures with a qualified Chartered Accountant before filing GSTR-9/9C on the GST Portal.
+    </p>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer no-print">
+    <p>© 2026 IncomeAIHub — GST Annual Return Summary Tool | For estimation purposes only, not a substitute for professional CA advice.</p>
+  </footer>
+
+</div>
+
+<script>
+const MONTHS_FY = ["April","May","June","July","August","September","October","November","December","January","February","March"];
+
+function fmtINR(num){
+  num = isNaN(num) ? 0 : num;
+  return "₹" + num.toLocaleString('en-IN', {maximumFractionDigits:0});
+}
+
+function buildMonthlyTables(){
+  const salesBody = document.getElementById('salesBody');
+  const purchaseBody = document.getElementById('purchaseBody');
+  salesBody.innerHTML = "";
+  purchaseBody.innerHTML = "";
+
+  MONTHS_FY.forEach((m, i)=>{
+    // Sales row
+    const sr = document.createElement('tr');
+    sr.innerHTML = `
+      <td>${m}</td>
+      <td><input type="number" min="0" class="s-taxval" data-i="${i}" value="0" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="s-cgst" data-i="${i}" value="9" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="s-sgst" data-i="${i}" value="9" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="s-igst" data-i="${i}" value="0" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" class="s-exempt" data-i="${i}" value="0" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" class="s-export" data-i="${i}" value="0" oninput="calculateAll()"></td>
+    `;
+    salesBody.appendChild(sr);
+
+    // Purchase row
+    const pr = document.createElement('tr');
+    pr.innerHTML = `
+      <td>${m}</td>
+      <td><input type="number" min="0" class="p-taxval" data-i="${i}" value="0" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="p-cgst" data-i="${i}" value="9" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="p-sgst" data-i="${i}" value="9" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" max="50" class="p-igst" data-i="${i}" value="0" oninput="calculateAll()"></td>
+      <td><input type="number" min="0" class="p-rcm" data-i="${i}" value="0" oninput="calculateAll()"></td>
+    `;
+    purchaseBody.appendChild(pr);
+  });
+}
+
+function getVal(cls, i){
+  const el = document.querySelector(`.${cls}[data-i="${i}"]`);
+  return el ? (parseFloat(el.value) || 0) : 0;
+}
+
+function calculateAll(){
+  let totalTurnover = 0, totalExempt = 0, totalExport = 0;
+  let totalOutputCGST = 0, totalOutputSGST = 0, totalOutputIGST = 0;
+  let totalPurchase = 0, totalITC_CGST = 0, totalITC_SGST = 0, totalITC_IGST = 0;
+  let totalRCM = 0;
+
+  const monthRows = [];
+
+  MONTHS_FY.forEach((m, i)=>{
+    const sVal = getVal('s-taxval', i);
+    const sCgstRate = getVal('s-cgst', i);
+    const sSgstRate = getVal('s-sgst', i);
+    const sIgstRate = getVal('s-igst', i);
+    const sExempt = getVal('s-exempt', i);
+    const sExport = getVal('s-export', i);
+
+    const pVal = getVal('p-taxval', i);
+    const pCgstRate = getVal('p-cgst', i);
+    const pSgstRate = getVal('p-sgst', i);
+    const pIgstRate = getVal('p-igst', i);
+    const pRcm = getVal('p-rcm', i);
+
+    const sCgst = sVal * sCgstRate / 100;
+    const sSgst = sVal * sSgstRate / 100;
+    const sIgst = sVal * sIgstRate / 100;
+    const sOutputTax = sCgst + sSgst + sIgst;
+
+    const pCgst = pVal * pCgstRate / 100;
+    const pSgst = pVal * pSgstRate / 100;
+    const pIgst = pVal * pIgstRate / 100;
+    const pITC = pCgst + pSgst + pIgst;
+
+    totalTurnover += sVal;
+    totalExempt += sExempt;
+    totalExport += sExport;
+    totalOutputCGST += sCgst;
+    totalOutputSGST += sSgst;
+    totalOutputIGST += sIgst;
+
+    totalPurchase += pVal;
+    totalITC_CGST += pCgst;
+    totalITC_SGST += pSgst;
+    totalITC_IGST += pIgst;
+    totalRCM += pRcm;
+
+    monthRows.push({
+      month:m, sales:sVal, purchase:pVal,
+      outputTax: sOutputTax, itc: pITC,
+      net: sOutputTax - pITC
+    });
+  });
+
+  const totalOutputTax = totalOutputCGST + totalOutputSGST + totalOutputIGST;
+  const totalITC = totalITC_CGST + totalITC_SGST + totalITC_IGST;
+
+  const itcReversed = parseFloat(document.getElementById('itcReversed').value) || 0;
+  const itcIneligible = parseFloat(document.getElementById('itcIneligible').value) || 0;
+  const itcTran = parseFloat(document.getElementById('itcTran').value) || 0;
+  const itcExcess = parseFloat(document.getElementById('itcExcess').value) || 0;
+
+  const netAvailableITC = totalITC - itcReversed - itcIneligible - itcExcess + itcTran;
+
+  const lateFee = parseFloat(document.getElementById('lateFee').value) || 0;
+  const interest = parseFloat(document.getElementById('interest').value) || 0;
+  const openingCash = parseFloat(document.getElementById('openingCash').value) || 0;
+  const openingCredit = parseFloat(document.getElementById('openingCredit').value) || 0;
+
+  const totalLiabilityWithRCM = totalOutputTax + totalRCM;
+  let netTaxPayable = totalLiabilityWithRCM - netAvailableITC - openingCredit + lateFee + interest;
+  let cashRequired = netTaxPayable - openingCash;
+  const isRefund = netTaxPayable < 0;
+
+  // ===== KPI cards =====
+  document.getElementById('kpiTurnover').textContent = fmtINR(totalTurnover + totalExempt + totalExport);
+  document.getElementById('kpiOutputTax').textContent = fmtINR(totalOutputTax);
+  document.getElementById('kpiITC').textContent = fmtINR(netAvailableITC);
+  const kpiNetEl = document.getElementById('kpiNetTax');
+  const kpiNetCard = document.getElementById('kpiNetCard');
+  kpiNetEl.textContent = fmtINR(Math.abs(netTaxPayable));
+  kpiNetCard.classList.remove('amber','green','red');
+  kpiNetCard.classList.add(isRefund ? 'green' : (netTaxPayable > 0 ? 'amber' : 'green'));
+  document.querySelector('#kpiNetCard .label').textContent = isRefund ? "Net Refund / Excess ITC" : "Net Tax Payable";
+
+  // ===== Section A: Outward Supplies =====
+  const grossTurnover = totalTurnover + totalExempt + totalExport;
+  document.getElementById('sectionAStatus').textContent =
+    grossTurnover >= 50000000 ? "⚠ GSTR-9C Mandatory (Turnover ≥ ₹5 Cr)" :
+    grossTurnover >= 20000000 ? "ℹ GSTR-9C may apply (₹2-5 Cr range)" : "✓ GSTR-9 Optional Range (< ₹2 Cr)";
+
+  document.getElementById('sectionABody').innerHTML = `
+    <tr><td>Taxable Outward Supplies (Total Sales)</td><td>${fmtINR(totalTurnover)}</td></tr>
+    <tr><td>Exempt / Nil Rated Supplies</td><td>${fmtINR(totalExempt)}</td></tr>
+    <tr><td>Export / Zero-Rated Supplies</td><td>${fmtINR(totalExport)}</td></tr>
+    <tr><td>Gross Annual Turnover</td><td><strong>${fmtINR(grossTurnover)}</strong></td></tr>
+    <tr class="subhead"><td colspan="2">Output Tax Liability</td></tr>
+    <tr><td>Output CGST</td><td>${fmtINR(totalOutputCGST)}</td></tr>
+    <tr><td>Output SGST</td><td>${fmtINR(totalOutputSGST)}</td></tr>
+    <tr><td>Output IGST</td><td>${fmtINR(totalOutputIGST)}</td></tr>
+    <tr class="total-row"><td>Total Output Tax</td><td>${fmtINR(totalOutputTax)}</td></tr>
+  `;
+
+  // ===== Section B: Inward + ITC =====
+  document.getElementById('sectionBBody').innerHTML = `
+    <tr><td>Total Taxable Purchases</td><td>${fmtINR(totalPurchase)}</td></tr>
+    <tr class="subhead"><td colspan="2">Input Tax Credit (ITC) Break-up</td></tr>
+    <tr><td>ITC — CGST</td><td>${fmtINR(totalITC_CGST)}</td></tr>
+    <tr><td>ITC — SGST</td><td>${fmtINR(totalITC_SGST)}</td></tr>
+    <tr><td>ITC — IGST</td><td>${fmtINR(totalITC_IGST)}</td></tr>
+    <tr><td>Total ITC (Gross)</td><td><strong>${fmtINR(totalITC)}</strong></td></tr>
+    <tr class="subhead"><td colspan="2">ITC Adjustments</td></tr>
+    <tr><td>(−) ITC Reversed (Rule 42/43)</td><td>${fmtINR(itcReversed)}</td></tr>
+    <tr><td>(−) Ineligible ITC (Sec 17(5))</td><td>${fmtINR(itcIneligible)}</td></tr>
+    <tr><td>(−) Excess ITC Claimed Earlier</td><td>${fmtINR(itcExcess)}</td></tr>
+    <tr><td>(+) ITC via TRAN-1/2</td><td>${fmtINR(itcTran)}</td></tr>
+    <tr class="total-row"><td>Net Available ITC</td><td>${fmtINR(netAvailableITC)}</td></tr>
+    <tr><td>RCM Liability (Reverse Charge)</td><td>${fmtINR(totalRCM)}</td></tr>
+  `;
+
+  // ===== Section C: Tax Liability =====
+  document.getElementById('sectionCBody').innerHTML = `
+    <tr><td>Total Output Tax Liability</td><td>${fmtINR(totalOutputTax)}</td></tr>
+    <tr><td>(+) RCM Liability</td><td>${fmtINR(totalRCM)}</td></tr>
+    <tr><td>Gross Tax Liability</td><td>${fmtINR(totalLiabilityWithRCM)}</td></tr>
+    <tr><td>(−) Net Available ITC</td><td>${fmtINR(netAvailableITC)}</td></tr>
+    <tr><td>(−) Opening Credit Ledger Balance</td><td>${fmtINR(openingCredit)}</td></tr>
+    <tr><td>(+) Late Fee</td><td>${fmtINR(lateFee)}</td></tr>
+    <tr><td>(+) Interest on Late Payment</td><td>${fmtINR(interest)}</td></tr>
+    <tr class="total-row"><td>${isRefund ? "Net Refund / Excess ITC Carried Forward" : "Net Tax Payable"}</td><td>${fmtINR(Math.abs(netTaxPayable))}</td></tr>
+    <tr><td>(−) Opening Cash Ledger Balance</td><td>${fmtINR(openingCash)}</td></tr>
+    <tr class="total-row"><td>${cashRequired < 0 ? "Excess Cash Available" : "Additional Cash to be Deposited"}</td><td>${fmtINR(Math.abs(cashRequired))}</td></tr>
+  `;
+
+  // ===== Month-wise breakdown =====
+  document.getElementById('breakdownBody').innerHTML = monthRows.map(r => `
+    <tr>
+      <td>${r.month}</td>
+      <td>${fmtINR(r.sales)}</td>
+      <td>${fmtINR(r.purchase)}</td>
+      <td>${fmtINR(r.outputTax)}</td>
+      <td>${fmtINR(r.itc)}</td>
+      <td style="color:${r.net >= 0 ? 'var(--amber)' : 'var(--green)'}">${fmtINR(Math.abs(r.net))} ${r.net >= 0 ? '(Payable)' : '(Excess ITC)'}</td>
+    </tr>
+  `).join('');
+
+  // Update FY Badge
+  document.getElementById('fyBadge').textContent = "FY " + document.getElementById('fySelect').value;
+
+  // store for print + csv
+  window.__gstData = {
+    monthRows, totalTurnover, totalExempt, totalExport, grossTurnover,
+    totalOutputCGST, totalOutputSGST, totalOutputIGST, totalOutputTax,
+    totalPurchase, totalITC_CGST, totalITC_SGST, totalITC_IGST, totalITC,
+    itcReversed, itcIneligible, itcTran, itcExcess, netAvailableITC,
+    totalRCM, lateFee, interest, openingCash, openingCredit,
+    totalLiabilityWithRCM, netTaxPayable, cashRequired, isRefund
+  };
+
+  buildPrintReport();
+}
+
+function buildPrintReport(){
+  const d = window.__gstData;
+  if(!d) return;
+  const gstin = document.getElementById('gstin').value || "—";
+  const legalName = document.getElementById('legalName').value || "—";
+  const fy = document.getElementById('fySelect').value;
+  const state = document.getElementById('stateSelect').value;
+
+  document.getElementById('pGstin').textContent = gstin;
+  document.getElementById('pLegalName').textContent = legalName;
+  document.getElementById('pFy').textContent = fy;
+  document.getElementById('pState').textContent = state;
+  document.getElementById('printMeta').textContent = `Financial Year ${fy} | Generated on ${new Date().toLocaleDateString('en-IN')}`;
+
+  document.getElementById('pSectionA').innerHTML = `
+    <tr><th>Particulars</th><th>Amount (₹)</th></tr>
+    <tr><td>Taxable Outward Supplies</td><td>${fmtINR(d.totalTurnover)}</td></tr>
+    <tr><td>Exempt / Nil Rated Supplies</td><td>${fmtINR(d.totalExempt)}</td></tr>
+    <tr><td>Export / Zero-Rated Supplies</td><td>${fmtINR(d.totalExport)}</td></tr>
+    <tr><td><strong>Gross Annual Turnover</strong></td><td><strong>${fmtINR(d.grossTurnover)}</strong></td></tr>
+    <tr><td>Output CGST</td><td>${fmtINR(d.totalOutputCGST)}</td></tr>
+    <tr><td>Output SGST</td><td>${fmtINR(d.totalOutputSGST)}</td></tr>
+    <tr><td>Output IGST</td><td>${fmtINR(d.totalOutputIGST)}</td></tr>
+    <tr><td><strong>Total Output Tax</strong></td><td><strong>${fmtINR(d.totalOutputTax)}</strong></td></tr>
+  `;
+
+  document.getElementById('pSectionB').innerHTML = `
+    <tr><th>Particulars</th><th>Amount (₹)</th></tr>
+    <tr><td>Total Taxable Purchases</td><td>${fmtINR(d.totalPurchase)}</td></tr>
+    <tr><td>ITC — CGST</td><td>${fmtINR(d.totalITC_CGST)}</td></tr>
+    <tr><td>ITC — SGST</td><td>${fmtINR(d.totalITC_SGST)}</td></tr>
+    <tr><td>ITC — IGST</td><td>${fmtINR(d.totalITC_IGST)}</td></tr>
+    <tr><td>Total ITC (Gross)</td><td>${fmtINR(d.totalITC)}</td></tr>
+    <tr><td>(−) ITC Reversed</td><td>${fmtINR(d.itcReversed)}</td></tr>
+    <tr><td>(−) Ineligible ITC</td><td>${fmtINR(d.itcIneligible)}</td></tr>
+    <tr><td>(−) Excess ITC Claimed Earlier</td><td>${fmtINR(d.itcExcess)}</td></tr>
+    <tr><td>(+) ITC via TRAN-1/2</td><td>${fmtINR(d.itcTran)}</td></tr>
+    <tr><td><strong>Net Available ITC</strong></td><td><strong>${fmtINR(d.netAvailableITC)}</strong></td></tr>
+    <tr><td>RCM Liability</td><td>${fmtINR(d.totalRCM)}</td></tr>
+  `;
+
+  document.getElementById('pSectionC').innerHTML = `
+    <tr><th>Particulars</th><th>Amount (₹)</th></tr>
+    <tr><td>Gross Tax Liability (Output + RCM)</td><td>${fmtINR(d.totalLiabilityWithRCM)}</td></tr>
+    <tr><td>(−) Net Available ITC</td><td>${fmtINR(d.netAvailableITC)}</td></tr>
+    <tr><td>(−) Opening Credit Ledger</td><td>${fmtINR(d.openingCredit)}</td></tr>
+    <tr><td>(+) Late Fee</td><td>${fmtINR(d.lateFee)}</td></tr>
+    <tr><td>(+) Interest</td><td>${fmtINR(d.interest)}</td></tr>
+    <tr><td><strong>${d.isRefund ? "Net Refund / Excess ITC" : "Net Tax Payable"}</strong></td><td><strong>${fmtINR(Math.abs(d.netTaxPayable))}</strong></td></tr>
+    <tr><td>(−) Opening Cash Ledger</td><td>${fmtINR(d.openingCash)}</td></tr>
+    <tr><td><strong>${d.cashRequired < 0 ? "Excess Cash Available" : "Additional Cash to Deposit"}</strong></td><td><strong>${fmtINR(Math.abs(d.cashRequired))}</strong></td></tr>
+  `;
+
+  document.getElementById('pBreakdown').innerHTML = `
+    <tr><th>Month</th><th>Sales</th><th>Purchase</th><th>Output Tax</th><th>ITC</th><th>Net</th></tr>
+    ${d.monthRows.map(r => `
+      <tr>
+        <td>${r.month}</td><td>${fmtINR(r.sales)}</td><td>${fmtINR(r.purchase)}</td>
+        <td>${fmtINR(r.outputTax)}</td><td>${fmtINR(r.itc)}</td>
+        <td>${fmtINR(Math.abs(r.net))} ${r.net >= 0 ? '(Pay)' : '(ITC)'}</td>
+      </tr>`).join('')}
+  `;
+}
+
+function goToTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> goToTab(btn.dataset.tab));
+});
+
+function fillSampleData(){
+  MONTHS_FY.forEach((m,i)=>{
+    document.querySelector(`.s-taxval[data-i="${i}"]`).value = (150000 + i*8000);
+    document.querySelector(`.s-exempt[data-i="${i}"]`).value = 5000;
+    document.querySelector(`.s-export[data-i="${i}"]`).value = i % 3 === 0 ? 20000 : 0;
+    document.querySelector(`.p-taxval[data-i="${i}"]`).value = (60000 + i*3000);
+    document.querySelector(`.p-rcm[data-i="${i}"]`).value = i % 4 === 0 ? 1500 : 0;
+  });
+  document.getElementById('gstin').value = "22AAAAA0000A1Z5";
+  document.getElementById('legalName').value = "Sample Enterprises";
+  calculateAll();
+}
+
+function clearAllData(){
+  if(!confirm("Saara data clear kar dein? Yeh action undo nahi ho sakta.")) return;
+  document.querySelectorAll('#salesTable input, #purchaseTable input').forEach(inp=>{
+    inp.value = inp.classList.contains('s-cgst') || inp.classList.contains('s-sgst') || inp.classList.contains('p-cgst') || inp.classList.contains('p-sgst') ? 9 : 0;
+  });
+  document.querySelectorAll('#tab-itc input').forEach(inp => inp.value = 0);
+  calculateAll();
+}
+
+function exportCSV(){
+  const d = window.__gstData;
+  if(!d) return;
+  let csv = "Month,Sales,Purchase,Output Tax,ITC,Net Payable\n";
+  d.monthRows.forEach(r=>{
+    csv += `${r.month},${r.sales},${r.purchase},${r.outputTax.toFixed(2)},${r.itc.toFixed(2)},${r.net.toFixed(2)}\n`;
+  });
+  csv += `\nGross Turnover,${d.grossTurnover}\n`;
+  csv += `Total Output Tax,${d.totalOutputTax.toFixed(2)}\n`;
+  csv += `Net Available ITC,${d.netAvailableITC.toFixed(2)}\n`;
+  csv += `Net Tax Payable,${d.netTaxPayable.toFixed(2)}\n`;
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `GST_Annual_Summary_${document.getElementById('fySelect').value}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('fySelect').addEventListener('change', calculateAll);
+document.getElementById('stateSelect').addEventListener('change', calculateAll);
+
+// Init
+buildMonthlyTables();
+calculateAll();
+</script>
+
+</body>
+</html>
